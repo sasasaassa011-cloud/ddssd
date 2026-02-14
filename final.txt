@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mining Panel 2026</title>
+    <style>
+        body { 
+            margin: 0; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f0f 100%);
+            font-family: 'Segoe UI', sans-serif; 
+            color: white; 
+            overflow: hidden; 
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 100px 150px, #0088cc, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 150px 200px, #fff, rgba(0,0,0,0));
+            background-size: 300px 300px;
+            opacity: 0.3;
+            animation: starsMove 100s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes starsMove {
+            from { background-position: 0 0; }
+            to { background-position: 1000px 1000px; }
+        }
+
+        .balance-container { 
+            position: absolute; 
+            top: 20px; 
+            left: 20px; 
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 10px 25px; 
+            border-radius: 12px; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .balance-container:hover { transform: scale(1.05); }
+        .balance-value { font-size: 26px; font-weight: bold; color: #0088cc; }
+
+        /* USER ID DISPLAY */
+        .user-id-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .user-id-container:hover { 
+            transform: scale(1.05); 
+            background: rgba(0, 136, 204, 0.1);
+        }
+        .user-id-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .user-id-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #f1c40f;
+            margin-top: 3px;
+        }
+
+        #activeAsics { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 10px; max-width: 90vw; min-height: 35px; }
+        .bought-asic { background: linear-gradient(145deg, #2ecc71, #27ae60); padding: 6px 15px; border-radius: 8px; font-size: 11px; font-weight: bold; animation: pulse 2s infinite; border: 1px solid rgba(255,255,255,0.2); color: white; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .info-icon { width: 30px; height: 30px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; color: #888; margin-bottom: 5px; }
+        .controls-wrapper { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px; z-index: 10; }
+        .btn-buy { background: #f1c40f; color: #000; padding: 12px 60px; font-size: 18px; font-weight: 900; border: none; border-radius: 50px; cursor: pointer; text-transform: uppercase; box-shadow: 0 5px 15px rgba(241, 196, 15, 0.3); transition: 0.3s; }
+        .btn-buy:hover { transform: scale(1.05); background: #fff111; }
+        .main-controls { display: flex; gap: 20px; margin-top: 5px; }
+        .btn-main { padding: 18px 40px; font-size: 18px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; color: white; min-width: 180px; text-transform: uppercase; transition: 0.3s; }
+        .btn-deposit { background: #e74c3c; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3); }
+        .btn-withdraw { background: #2ecc71; box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3); }
+        .btn-main:hover { transform: translateY(-3px); opacity: 0.9; }
+
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(20px); padding: 30px; border-radius: 30px; z-index: 100; text-align: center; border: 1px solid #444; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        
+        #shopModal { width: 90%; max-width: 1100px; max-height: 80vh; overflow-y: auto; padding: 40px; }
+        .asic-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 25px; margin-top: 25px; }
+        .asic-card { 
+            background: linear-gradient(145deg, rgba(40,40,40,0.6), rgba(20,20,20,0.8));
+            padding: 25px; 
+            border-radius: 20px; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            transition: 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+        .asic-card:hover {
+            transform: translateY(-10px);
+            border-color: #0088cc;
+            box-shadow: 0 10px 30px rgba(0, 136, 204, 0.2);
+        }
+        .asic-card h3 { margin: 0 0 15px 0; color: #fff; font-size: 20px; }
+        .asic-card p { margin: 8px 0; font-size: 15px; color: #bbb; }
+        .asic-card b { color: #f1c40f; }
+        .asic-price { font-weight: bold; color: #f1c40f; font-size: 18px; }
+        .asic-income { color: #2ecc71; font-weight: bold; }
+
+        .history-container { margin-top: 20px; width: 450px; max-height: 120px; overflow-y: auto; background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px); }
+        
+        /* UPDATED REFERRAL CONTAINER */
+        .ref-container { 
+            margin-top: 15px; 
+            width: 450px; 
+            background: linear-gradient(145deg, rgba(0, 136, 204, 0.1), rgba(46, 204, 113, 0.05));
+            padding: 20px; 
+            border-radius: 15px; 
+            border: 2px solid rgba(0, 136, 204, 0.3); 
+            text-align: center; 
+            backdrop-filter: blur(5px);
+            box-shadow: 0 5px 20px rgba(0, 136, 204, 0.2);
+        }
+        
+        .ref-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #f1c40f;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .ref-description {
+            font-size: 11px;
+            color: #bbb;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .ref-reward {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .ref-link-container {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 136, 204, 0.3);
+            margin: 15px 0;
+        }
+
+        .ref-link-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .ref-link { 
+            font-size: 12px;
+            color: #0088cc;
+            background: #0a0a0a;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            word-break: break-all;
+            display: block;
+            border: 2px dashed #0088cc;
+            transition: 0.3s;
+            font-weight: bold;
+        }
+
+        .ref-link:hover {
+            background: #111;
+            border-color: #2ecc71;
+            transform: scale(1.02);
+        }
+
+        .ref-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            gap: 10px;
+        }
+
+        .ref-stat-item {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px;
+            border-radius: 10px;
+            flex: 1;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .ref-stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2ecc71;
+        }
+
+        .ref-stat-label {
+            font-size: 9px;
+            color: #888;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        #friendsContainer {
+            margin-top: 15px;
+            text-align: left;
+            font-size: 11px;
+            max-height: 150px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .friend-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border-left: 3px solid #2ecc71;
+        }
+
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 50; }
+
+        /* ADMIN PANEL STYLES */
+        #adminModal { width: 90%; max-width: 900px; max-height: 85vh; overflow-y: auto; }
+        
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+        }
+        
+        .admin-tab {
+            padding: 12px 25px;
+            background: rgba(255,255,255,0.05);
+            border: none;
+            border-radius: 10px 10px 0 0;
+            color: #888;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        
+        .admin-tab.active {
+            background: rgba(0, 136, 204, 0.2);
+            color: #0088cc;
+            border-bottom: 3px solid #0088cc;
+        }
+        
+        .admin-tab:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .admin-tab-content {
+            display: none;
+        }
+        
+        .admin-tab-content.active {
+            display: block;
+        }
+        
+        .user-list { max-height: 400px; overflow-y: auto; margin-top: 15px; }
+        .user-item { 
+            background: rgba(255,255,255,0.05); 
+            padding: 12px; 
+            margin: 8px 0; 
+            border-radius: 10px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .user-item button { 
+            background: #2ecc71; 
+            border: none; 
+            padding: 8px 15px; 
+            border-radius: 8px; 
+            color: white; 
+            cursor: pointer; 
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .user-item button:hover { background: #27ae60; transform: scale(1.05); }
+
+        /* DEPOSIT REQUEST STYLES */
+        .deposit-request {
+            background: rgba(241, 196, 15, 0.1);
+            border: 1px solid rgba(241, 196, 15, 0.3);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 12px;
+            border-left: 4px solid #f1c40f;
+        }
+
+        /* WITHDRAWAL REQUESTS STYLES */
+        .withdrawal-request {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 12px;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .withdrawal-header, .deposit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .withdrawal-user, .deposit-user {
+            font-weight: bold;
+            color: #0088cc;
+            font-size: 14px;
+        }
+        
+        .withdrawal-amount, .deposit-amount {
+            font-size: 20px;
+            font-weight: bold;
+            color: #f1c40f;
+        }
+        
+        .withdrawal-info, .deposit-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        
+        .withdrawal-address {
+            color: #888;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            background: #111;
+            padding: 8px;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        
+        .withdrawal-actions, .deposit-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn-approve {
+            flex: 1;
+            background: #2ecc71;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .btn-approve:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+        }
+        
+        .btn-reject {
+            flex: 1;
+            background: #e74c3c;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .btn-reject:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .withdrawal-date, .deposit-date {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* COPY NOTIFICATION */
+        .copy-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(46, 204, 113, 0.95);
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: bold;
+            z-index: 1000;
+            animation: fadeInOut 1.5s;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        }
+
+        /* OFFLINE EARNINGS NOTIFICATION */
+        .offline-earnings-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(145deg, rgba(46, 204, 113, 0.95), rgba(39, 174, 96, 0.95));
+            padding: 30px 40px;
+            border-radius: 20px;
+            z-index: 1000;
+            text-align: center;
+            border: 2px solid #2ecc71;
+            box-shadow: 0 20px 60px rgba(46, 204, 113, 0.4);
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+        .offline-earnings-modal h2 {
+            margin: 0 0 15px 0;
+            font-size: 24px;
+            color: white;
+        }
+        .offline-earnings-amount {
+            font-size: 36px;
+            font-weight: bold;
+            color: #fff;
+            margin: 15px 0;
+        }
+        .offline-earnings-time {
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 20px;
+        }
+
+        /* WARNING BOX STYLE */
+        .warning-box {
+            background: rgba(241, 196, 15, 0.15);
+            border: 2px solid #f1c40f;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: left;
+            line-height: 1.6;
+        }
+        .warning-box strong {
+            color: #f1c40f;
+            font-size: 13px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .warning-box p {
+            font-size: 12px;
+            color: #ddd;
+            margin: 5px 0;
+        }
+        .example-id {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            color: #0088cc;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 5px;
+            border: 1px dashed #555;
+            cursor: pointer;
+        }
+
+        .history-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 5px;
+        }
+
+        .btn-reset {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: 0.3s;
+        }
+
+        .btn-reset:hover {
+            background: #c0392b;
+            transform: scale(1.05);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .user-id-container {
+                top: 80px;
+                right: 20px;
+            }
+            .history-container, .ref-container {
+                width: 90vw;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="balance-container" onclick="balanceClick()">
+        <div class="balance-value"><span id="userBalance">0.0000</span> TON</div>
+    </div>
+
+    <!-- USER ID DISPLAY -->
+    <div class="user-id-container" onclick="copyUserId()" title="Нажмите, чтобы скопировать">
+        <div class="user-id-label">Ваш ID</div>
+        <div class="user-id-value" id="displayUserId">loading...</div>
+    </div>
+
+    <div class="controls-wrapper">
+        <div id="activeAsics"></div>
+        <div class="info-icon" onclick="openModal('infoModal')">?</div>
+        <button class="btn-buy" onclick="openModal('shopModal')">КУПИТЬ АСИК</button>
+        <div class="main-controls">
+            <button class="btn-main btn-deposit" onclick="openModal('depositModal')">ПОПОЛНИТЬ</button>
+            <button class="btn-main btn-withdraw" onclick="openModal('withdrawModal')">ВЫВЕСТИ</button>
+        </div>
+    </div>
+
+    <div class="history-container">
+        <div style="font-size: 10px; color: #555; margin-bottom: 8px; text-align: center; text-transform: uppercase;">История транзакций</div>
+        <div id="historyList"></div>
+    </div>
+
+    <!-- UPDATED REFERRAL SECTION -->
+    <div class="ref-container">
+        <div class="ref-title">
+            <span>🎁</span>
+            <span>РЕФЕРАЛЬНАЯ ПРОГРАММА</span>
+            <span>🎁</span>
+        </div>
+        
+        <div class="ref-description">
+            Приглашайте друзей и получайте:<br>
+            <span class="ref-reward">💰 5% от их пополнений TON</span><br>
+            <span class="ref-reward">⚡ 1% от дохода их асиков</span>
+        </div>
+
+        <div class="ref-link-container">
+            <div class="ref-link-label">Ваша реферальная ссылка:</div>
+            <div class="ref-link" id="myRefLink" onclick="copyRef()">загрузка ссылки...</div>
+        </div>
+
+        <div class="ref-stats">
+            <div class="ref-stat-item">
+                <div class="ref-stat-value" id="refCount">0</div>
+                <div class="ref-stat-label">Рефералов</div>
+            </div>
+            <div class="ref-stat-item">
+                <div class="ref-stat-value" id="refEarnings">0.00</div>
+                <div class="ref-stat-label">Заработано TON</div>
+            </div>
+        </div>
+
+        <div id="friendsContainer">
+            <div style="color:#555; text-align:center;">Приглашённых друзей пока нет</div>
+        </div>
+    </div>
+
+    <div id="overlay" onclick="closeAll()"></div>
+
+    <!-- ADMIN PANEL MODAL WITH TABS -->
+    <div id="adminModal" class="modal">
+        <h2 style="margin-top:0; color: #f1c40f;">👑 АДМИН-ПАНЕЛЬ</h2>
+        
+        <div class="admin-tabs">
+            <button class="admin-tab active" onclick="switchAdminTab('users')">👥 Пользователи</button>
+            <button class="admin-tab" onclick="switchAdminTab('deposits')">💰 Заявки на пополнение</button>
+            <button class="admin-tab" onclick="switchAdminTab('withdrawals')">💸 Заявки на вывод</button>
+        </div>
+
+        <!-- TAB 1: USERS -->
+        <div id="usersTab" class="admin-tab-content active">
+            <p style="color: #888; font-size: 13px;">Управление балансами пользователей</p>
+            
+            <div style="margin: 20px 0;">
+                <input type="text" id="adminUserId" placeholder="ID пользователя" style="width:85%; background:#111; border:1px solid #444; padding:12px; border-radius:10px; color:white; margin:5px 0;">
+                <input type="number" id="adminAmount" placeholder="Сумма TON" style="width:85%; background:#111; border:1px solid #444; padding:12px; border-radius:10px; color:white; margin:5px 0;">
+                <button class="btn-main btn-withdraw" style="min-width:100%; margin-top: 10px;" onclick="addBalanceToUser()">ВЫДАТЬ TON</button>
+            </div>
+
+            <div style="border-top: 1px solid #333; padding-top: 15px; margin-top: 15px;">
+                <h3 style="font-size: 16px; color: #0088cc;">Список пользователей</h3>
+                <div class="user-list" id="usersList"></div>
+            </div>
+
+            <div style="border-top: 1px solid #333; padding-top: 15px; margin-top: 15px; text-align: center;">
+                <button class="btn-reset" onclick="resetMyAccount()">🔄 СБРОСИТЬ МОЙ АККАУНТ</button>
+                <p style="font-size: 11px; color: #888; margin-top: 10px;">Это удалит все данные вашего аккаунта</p>
+            </div>
+        </div>
+
+        <!-- TAB 2: DEPOSIT REQUESTS -->
+        <div id="depositsTab" class="admin-tab-content">
+            <p style="color: #888; font-size: 13px;">Обработка заявок на пополнение</p>
+            <div id="depositsList" style="max-height: 500px; overflow-y: auto; margin-top: 20px;"></div>
+        </div>
+
+        <!-- TAB 3: WITHDRAWAL REQUESTS -->
+        <div id="withdrawalsTab" class="admin-tab-content">
+            <p style="color: #888; font-size: 13px;">Обработка заявок на вывод средств</p>
+            <div id="withdrawalsList" style="max-height: 500px; overflow-y: auto; margin-top: 20px;"></div>
+        </div>
+
+        <button onclick="closeAll()" style="background:none; border:none; color:#555; margin-top: 20px; cursor:pointer; font-weight: bold;">ЗАКРЫТЬ</button>
+    </div>
+
+    <!-- CODE INPUT MODAL -->
+    <div id="codeModal" class="modal">
+        <h2 style="margin-top:0; color: #e74c3c;">🔒 ТРЕБУЕТСЯ КОД</h2>
+        <p style="color: #888; font-size: 13px;">Введите секретный код администратора</p>
+        <input type="password" id="secretCode" placeholder="Введите код" style="width:85%; background:#111; border:1px solid #444; padding:12px; border-radius:10px; color:white; margin:10px 0;" onkeypress="if(event.key==='Enter') checkAdminCode()">
+        <button class="btn-main btn-deposit" style="min-width:100%" onclick="checkAdminCode()">ПОДТВЕРДИТЬ</button>
+        <button onclick="closeAll()" style="background:none; border:none; color:#555; margin-top: 10px; cursor:pointer;">ОТМЕНА</button>
+    </div>
+
+    <!-- SHOP MODAL -->
+    <div id="shopModal" class="modal">
+        <h2 style="margin-top:0; font-size: 28px; letter-spacing: 2px;">МАГАЗИН ASIC</h2>
+        <p style="color: #666; font-size: 14px;">Выберите оборудование для увеличения мощности</p>
+        <div class="asic-grid">
+            <div class="asic-card">
+                <h3>⚡ ASIC #1</h3>
+                <p>Цена: <span class="asic-price">5 TON</span></p>
+                <p>Доход: <span class="asic-income">6 TON/мес</span></p>
+                <button class="btn-main btn-withdraw" style="min-width:100%; font-size: 14px; margin-top: 15px; padding: 12px;" onclick="buyAsic(5, 'Асик #1', 6)">КУПИТЬ</button>
+            </div>
+            <div class="asic-card">
+                <h3>🔥 ASIC #2</h3>
+                <p>Цена: <span class="asic-price">20 TON</span></p>
+                <p>Доход: <span class="asic-income">24 TON/мес</span></p>
+                <button class="btn-main btn-withdraw" style="min-width:100%; font-size: 14px; margin-top: 15px; padding: 12px;" onclick="buyAsic(20, 'Асик #2', 24)">КУПИТЬ</button>
+            </div>
+            <div class="asic-card">
+                <h3>💎 ASIC #3</h3>
+                <p>Цена: <span class="asic-price">50 TON</span></p>
+                <p>Доход: <span class="asic-income">60 TON/мес</span></p>
+                <button class="btn-main btn-withdraw" style="min-width:100%; font-size: 14px; margin-top: 15px; padding: 12px;" onclick="buyAsic(50, 'Асик #3', 60)">КУПИТЬ</button>
+            </div>
+            <div class="asic-card">
+                <h3>🚀 ASIC #4</h3>
+                <p>Цена: <span class="asic-price">100 TON</span></p>
+                <p>Доход: <span class="asic-income">120 TON/мес</span></p>
+                <button class="btn-main btn-withdraw" style="min-width:100%; font-size: 14px; margin-top: 15px; padding: 12px;" onclick="buyAsic(100, 'Асик #4', 120)">КУПИТЬ</button>
+            </div>
+            <div class="asic-card">
+                <h3>👑 ASIC #5</h3>
+                <p>Цена: <span class="asic-price">250 TON</span></p>
+                <p>Доход: <span class="asic-income">325 TON/мес</span></p>
+                <button class="btn-main btn-withdraw" style="min-width:100%; font-size: 14px; margin-top: 15px; padding: 12px;" onclick="buyAsic(250, 'Асик #5', 325)">КУПИТЬ</button>
+            </div>
+        </div>
+        <button onclick="closeAll()" style="background:none; border:none; color:#555; margin-top: 30px; cursor:pointer; font-weight: bold;">ЗАКРЫТЬ МАГАЗИН</button>
+    </div>
+
+    <!-- DEPOSIT MODAL WITH WARNING -->
+    <div id="depositModal" class="modal">
+        <h2 style="margin-top:0">ПОПОЛНЕНИЕ</h2>
+        <p style="font-size: 11px; color: #e74c3c; font-weight: bold;">Отправляйте TON строго по данному адресу иначе средства не будут зачисленны</p>
+        <div style="font-size:10px; color:#f1c40f; background:#111; padding:12px; border-radius:8px; word-break:break-all; cursor:pointer;" onclick="copyAddr()">UQCCP9JVjzWbMYUfvYkFGfXp0GFwbqC3CX3ZDCjVb2yG_asb</div>
+        
+        <input type="number" id="sumInput" style="width:85%; background:#111; border:1px solid #444; padding:12px; border-radius:10px; color:white; margin:10px 0;" placeholder="Сумма TON" oninput="updateDep()">
+        
+        <!-- WARNING BOX -->
+        <div class="warning-box">
+            <strong>⚠️ ВАЖНО! ОБЯЗАТЕЛЬНО УКАЖИТЕ ВАШ USER ID!</strong>
+            <p>При отправке обязательно укажите свой <span style="color:#f1c40f;">user_ID</span> в комментарии к транзакции, иначе <span style="color:#e74c3c; font-weight:bold;">без user_ID средства не будут зачислены</span> на ваш баланс!</p>
+            <p style="margin-top: 10px;">Ваш ID: <span class="example-id" id="depositUserId" onclick="copyUserIdFromDeposit()">loading...</span></p>
+            <p style="font-size: 11px; color: #999; margin-top: 8px;">Нажмите на ID чтобы скопировать</p>
+        </div>
+        
+        <p>К зачислению: <span id="finalAmount" style="color:#0088cc; font-weight:bold;">0.00 TON</span></p>
+        <button class="btn-main btn-withdraw" style="min-width:100%; background: #2ecc71;" onclick="submitDeposit()">Я ОПЛАТИЛ</button>
+    </div>
+
+    <div id="infoModal" class="modal">
+        <h2 style="color: #e74c3c;">ВНИМАНИЕ!</h2>
+        <p style="font-size: 14px; line-height: 1.6; color: #ccc;">Выводы и пополнения производятся вручную <b>ОТ 24 ЧАСОВ до 48 ЧАСОВ</b>.</p>
+        <button onclick="closeAll()" style="background:#e74c3c; color:white; border:none; padding:10px 25px; border-radius:10px; cursor:pointer;">ОК</button>
+    </div>
+
+    <div id="withdrawModal" class="modal">
+        <h2>ВЫВОД СРЕДСТВ</h2>
+        <p style="font-size: 12px; color: #2ecc71; font-weight: bold; margin-bottom: 15px;">💰 Минимальная сумма вывода: 1 TON</p>
+        <input type="text" id="wAddr" style="width:85%; background:#111; border:1px solid #444; padding:12px; border-radius:10px; color:white; margin:10px 0;" placeholder="Адрес TON">
+        <input type="number" id="wSum" style="width:85%; background:#111; border:1px solid #444; padding:12px; border-radius:10px; color:white; margin:10px 0;" placeholder="Сумма (мин. 1 TON)">
+        <button class="btn-main btn-deposit" style="min-width:100%" onclick="submitWithdrawal()">ВЫВЕСТИ</button>
+    </div>
+
+    <script>
+        let gameState = { 
+            balance: 0.0000, 
+            income: 0, 
+            referrals: [], 
+            refEarnings: 0,
+            ownedAsics: [],
+            lastOnline: Date.now(),
+            transactionHistory: []
+        };
+        let clickCount = 0;
+        let clickTimer = null;
+        const ADMIN_CODE = "idsdsk_93934933943939jssidsdskdslsosodwelds";
+        let allUsers = {};
+        let myUserId = null;
+        let withdrawalRequests = [];
+        let depositRequests = [];
+
+        const MONTH_IN_MS = 30 * 24 * 60 * 60 * 1000;
+        const UPDATE_INTERVAL_MS = 1000;
+        const MIN_WITHDRAWAL = 1;
+
+        window.onload = () => {
+            myUserId = localStorage.getItem('myUserId');
+            if (!myUserId) {
+                myUserId = generateUniqueId();
+                localStorage.setItem('myUserId', myUserId);
+            }
+
+            document.getElementById('displayUserId').innerText = myUserId;
+            document.getElementById('depositUserId').innerText = myUserId;
+
+            loadUserData();
+            loadWithdrawalRequests();
+            loadDepositRequests();
+            calculateOfflineEarnings();
+            restoreAsics();
+            loadTransactionHistory();
+
+            const currentUrl = window.location.href.split('?')[0];
+            const refLink = `${currentUrl}?ref=${myUserId}`;
+            document.getElementById('myRefLink').innerText = refLink;
+            
+            const params = new URLSearchParams(window.location.search);
+            const refId = params.get('ref');
+            if (refId && refId !== myUserId) {
+                addReferral(refId, myUserId);
+            }
+
+            updateReferralStats();
+
+            setInterval(saveUserData, 5000);
+
+            window.addEventListener('beforeunload', () => {
+                gameState.lastOnline = Date.now();
+                saveUserData();
+            });
+        };
+
+        function resetMyAccount() {
+            if (confirm('⚠️ ВЫ УВЕРЕНЫ? Это удалит все данные вашего аккаунта:\n- Баланс\n- Асики\n- История транзакций\n- Рефералы')) {
+                // Сброс gameState
+                gameState = {
+                    balance: 0.0000, 
+                    income: 0, 
+                    referrals: [], 
+                    refEarnings: 0,
+                    ownedAsics: [],
+                    lastOnline: Date.now(),
+                    transactionHistory: []
+                };
+
+                // Обновляем в allUsers
+                allUsers[myUserId] = { ...gameState };
+                localStorage.setItem('allUsersData', JSON.stringify(allUsers));
+
+                // Очищаем интерфейс
+                updateUI();
+                restoreAsics();
+                loadTransactionHistory();
+                updateReferralStats();
+
+                alert('✅ Ваш аккаунт успешно сброшен!');
+                closeAll();
+                location.reload();
+            }
+        }
+
+        function loadDepositRequests() {
+            const saved = localStorage.getItem('depositRequests');
+            if (saved) {
+                depositRequests = JSON.parse(saved);
+            }
+        }
+
+        function saveDepositRequests() {
+            localStorage.setItem('depositRequests', JSON.stringify(depositRequests));
+        }
+
+        function submitDeposit() {
+            const amount = parseFloat(document.getElementById('sumInput').value);
+
+            if (!amount || amount <= 0) {
+                alert('❌ Введите корректную сумму');
+                return;
+            }
+
+            const requestId = Date.now();
+            const request = {
+                id: requestId,
+                userId: myUserId,
+                amount: amount,
+                date: new Date().toLocaleString('ru-RU'),
+                status: 'pending'
+            };
+
+            depositRequests.push(request);
+            saveDepositRequests();
+
+            addHistory('Пополнение (ожидание)', amount, requestId);
+            alert('✅ Заявка на пополнение отправлена! Ожидайте обработки.');
+            closeAll();
+
+            document.getElementById('sumInput').value = '';
+        }
+
+        function loadWithdrawalRequests() {
+            const saved = localStorage.getItem('withdrawalRequests');
+            if (saved) {
+                withdrawalRequests = JSON.parse(saved);
+            }
+        }
+
+        function saveWithdrawalRequests() {
+            localStorage.setItem('withdrawalRequests', JSON.stringify(withdrawalRequests));
+        }
+
+        function submitWithdrawal() {
+            const address = document.getElementById('wAddr').value.trim();
+            const amount = parseFloat(document.getElementById('wSum').value);
+
+            if (!address) {
+                alert('❌ Введите адрес TON');
+                return;
+            }
+
+            if (!amount || amount < MIN_WITHDRAWAL) {
+                alert(`❌ Минимальная сумма вывода: ${MIN_WITHDRAWAL} TON`);
+                return;
+            }
+
+            if (amount > gameState.balance) {
+                alert('❌ Недостаточно средств');
+                return;
+            }
+
+            const requestId = Date.now();
+            const request = {
+                id: requestId,
+                userId: myUserId,
+                address: address,
+                amount: amount,
+                date: new Date().toLocaleString('ru-RU'),
+                status: 'pending'
+            };
+
+            withdrawalRequests.push(request);
+            saveWithdrawalRequests();
+
+            gameState.balance -= amount;
+            saveUserData();
+            updateUI();
+
+            addHistory('Вывод (ожидание)', amount, requestId);
+            alert('✅ Заявка на вывод отправлена! Ожидайте обработки.');
+            closeAll();
+
+            document.getElementById('wAddr').value = '';
+            document.getElementById('wSum').value = '';
+        }
+
+        function switchAdminTab(tabName) {
+            document.querySelectorAll('.admin-tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.admin-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            if (tabName === 'users') {
+                document.getElementById('usersTab').classList.add('active');
+                document.querySelector('.admin-tab:nth-child(1)').classList.add('active');
+                loadAllUsers();
+            } else if (tabName === 'deposits') {
+                document.getElementById('depositsTab').classList.add('active');
+                document.querySelector('.admin-tab:nth-child(2)').classList.add('active');
+                loadDepositsForAdmin();
+            } else if (tabName === 'withdrawals') {
+                document.getElementById('withdrawalsTab').classList.add('active');
+                document.querySelector('.admin-tab:nth-child(3)').classList.add('active');
+                loadWithdrawalsForAdmin();
+            }
+        }
+
+        function loadDepositsForAdmin() {
+            loadDepositRequests();
+            const container = document.getElementById('depositsList');
+            container.innerHTML = '';
+
+            const pendingRequests = depositRequests.filter(req => req.status === 'pending');
+
+            if (pendingRequests.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#555; padding:40px;">Нет заявок на пополнение</div>';
+                return;
+            }
+
+            pendingRequests.forEach(request => {
+                const div = document.createElement('div');
+                div.className = 'deposit-request';
+                div.innerHTML = `
+                    <div class="deposit-header">
+                        <div class="deposit-user">User ID: ${request.userId}</div>
+                        <div class="deposit-amount">${request.amount} TON</div>
+                    </div>
+                    <div class="deposit-info">
+                        <div class="deposit-date">Дата заявки: ${request.date}</div>
+                    </div>
+                    <div class="deposit-actions">
+                        <button class="btn-approve" onclick="approveDeposit(${request.id})">✅ ОДОБРИТЬ</button>
+                        <button class="btn-reject" onclick="rejectDeposit(${request.id})">❌ ОТКЛОНИТЬ</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function approveDeposit(requestId) {
+            const request = depositRequests.find(r => r.id === requestId);
+            if (!request) return;
+
+            if (confirm(`Подтвердить пополнение ${request.amount} TON для пользователя ${request.userId}?`)) {
+                request.status = 'approved';
+                
+                if (allUsers[request.userId]) {
+                    allUsers[request.userId].balance += request.amount;
+                    
+                    if (allUsers[request.userId].transactionHistory) {
+                        const transaction = allUsers[request.userId].transactionHistory.find(t => t.requestId === requestId);
+                        if (transaction) {
+                            transaction.type = 'Пополнение ✅ Успешно';
+                        }
+                    }
+                    
+                    localStorage.setItem('allUsersData', JSON.stringify(allUsers));
+                    
+                    if (request.userId === myUserId) {
+                        gameState.balance += request.amount;
+                        
+                        const transaction = gameState.transactionHistory.find(t => t.requestId === requestId);
+                        if (transaction) {
+                            transaction.type = 'Пополнение ✅ Успешно';
+                        }
+                        
+                        updateUI();
+                        loadTransactionHistory();
+                    }
+                }
+                
+                saveDepositRequests();
+                showNotification(`✅ Пополнение ${request.amount} TON одобрено для ${request.userId}`);
+                loadDepositsForAdmin();
+            }
+        }
+
+        function rejectDeposit(requestId) {
+            const request = depositRequests.find(r => r.id === requestId);
+            if (!request) return;
+
+            if (confirm(`Отклонить заявку на пополнение ${request.amount} TON?`)) {
+                request.status = 'rejected';
+                
+                if (allUsers[request.userId] && allUsers[request.userId].transactionHistory) {
+                    allUsers[request.userId].transactionHistory = allUsers[request.userId].transactionHistory.filter(t => t.requestId !== requestId);
+                    localStorage.setItem('allUsersData', JSON.stringify(allUsers));
+                    
+                    if (request.userId === myUserId) {
+                        gameState.transactionHistory = gameState.transactionHistory.filter(t => t.requestId !== requestId);
+                        loadTransactionHistory();
+                    }
+                }
+                
+                saveDepositRequests();
+                showNotification(`❌ Заявка на пополнение отклонена`);
+                loadDepositsForAdmin();
+            }
+        }
+
+        function loadWithdrawalsForAdmin() {
+            loadWithdrawalRequests();
+            const container = document.getElementById('withdrawalsList');
+            container.innerHTML = '';
+
+            const pendingRequests = withdrawalRequests.filter(req => req.status === 'pending');
+
+            if (pendingRequests.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#555; padding:40px;">Нет заявок на вывод</div>';
+                return;
+            }
+
+            pendingRequests.forEach(request => {
+                const div = document.createElement('div');
+                div.className = 'withdrawal-request';
+                div.innerHTML = `
+                    <div class="withdrawal-header">
+                        <div class="withdrawal-user">User ID: ${request.userId}</div>
+                        <div class="withdrawal-amount">${request.amount} TON</div>
+                    </div>
+                    <div class="withdrawal-info">
+                        <strong style="color:#0088cc;">Адрес получателя:</strong>
+                        <div class="withdrawal-address" onclick="copyToClipboard('${request.address}')">${request.address}</div>
+                        <div class="withdrawal-date">Дата заявки: ${request.date}</div>
+                    </div>
+                    <div class="withdrawal-actions">
+                        <button class="btn-approve" onclick="approveWithdrawal(${request.id})">✅ ОДОБРИТЬ</button>
+                        <button class="btn-reject" onclick="rejectWithdrawal(${request.id})">❌ ОТКЛОНИТЬ</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function approveWithdrawal(requestId) {
+            const request = withdrawalRequests.find(r => r.id === requestId);
+            if (!request) return;
+
+            if (confirm(`Подтвердить отправку ${request.amount} TON на адрес:\n${request.address}?`)) {
+                request.status = 'approved';
+                
+                if (allUsers[request.userId] && allUsers[request.userId].transactionHistory) {
+                    const transaction = allUsers[request.userId].transactionHistory.find(t => t.requestId === requestId);
+                    if (transaction) {
+                        transaction.type = 'Вывод ✅ Успешно';
+                    }
+                    localStorage.setItem('allUsersData', JSON.stringify(allUsers));
+                    
+                    if (request.userId === myUserId) {
+                        const myTransaction = gameState.transactionHistory.find(t => t.requestId === requestId);
+                        if (myTransaction) {
+                            myTransaction.type = 'Вывод ✅ Успешно';
+                        }
+                        loadTransactionHistory();
+                    }
+                }
+                
+                saveWithdrawalRequests();
+                showNotification(`✅ Вывод ${request.amount} TON одобрен для ${request.userId}`);
+                loadWithdrawalsForAdmin();
+            }
+        }
+
+        function rejectWithdrawal(requestId) {
+            const request = withdrawalRequests.find(r => r.id === requestId);
+            if (!request) return;
+
+            if (confirm(`Отклонить заявку на вывод ${request.amount} TON?`)) {
+                request.status = 'rejected';
+                
+                if (allUsers[request.userId]) {
+                    allUsers[request.userId].balance += request.amount;
+                    
+                    if (allUsers[request.userId].transactionHistory) {
+                        allUsers[request.userId].transactionHistory = allUsers[request.userId].transactionHistory.filter(t => t.requestId !== requestId);
+                    }
+                    
+                    localStorage.setItem('allUsersData', JSON.stringify(allUsers));
+                    
+                    if (request.userId === myUserId) {
+                        gameState.balance += request.amount;
+                        gameState.transactionHistory = gameState.transactionHistory.filter(t => t.requestId !== requestId);
+                        updateUI();
+                        loadTransactionHistory();
+                    }
+                }
+                
+                saveWithdrawalRequests();
+                showNotification(`❌ Заявка отклонена, ${request.amount} TON возвращены пользователю`);
+                loadWithdrawalsForAdmin();
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            showNotification('📋 Адрес скопирован');
+        }
+
+        function calculateOfflineEarnings() {
+            if (!gameState.lastOnline) {
+                gameState.lastOnline = Date.now();
+                return;
+            }
+
+            if (gameState.income <= 0) return;
+
+            const now = Date.now();
+            const offlineTime = now - gameState.lastOnline;
+            const offlineSeconds = Math.floor(offlineTime / 1000);
+
+            if (offlineSeconds > 0) {
+                const offlineEarnings = gameState.income * offlineSeconds;
+                gameState.balance += offlineEarnings;
+
+                if (offlineEarnings > 0.001) {
+                    showOfflineEarningsModal(offlineEarnings, offlineTime);
+                }
+            }
+
+            gameState.lastOnline = now;
+            saveUserData();
+            updateUI();
+        }
+
+        function showOfflineEarningsModal(earnings, timeMs) {
+            const hours = Math.floor(timeMs / (1000 * 60 * 60));
+            const minutes = Math.floor((timeMs % (1000 * 60 * 60)) / (1000 * 60));
+            
+            let timeText = '';
+            if (hours > 0) {
+                timeText = `${hours}ч ${minutes}мин`;
+            } else {
+                timeText = `${minutes}мин`;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'offline-earnings-modal';
+            modal.innerHTML = `
+                <h2>💰 ОФФЛАЙН ДОХОД</h2>
+                <p style="color: rgba(255,255,255,0.9); margin: 10px 0;">Пока вас не было, ваши асики намайнили:</p>
+                <div class="offline-earnings-amount">+${earnings.toFixed(6)} TON</div>
+                <div class="offline-earnings-time">Вы отсутствовали: ${timeText}</div>
+                <button onclick="this.parentElement.remove()" style="background: white; color: #2ecc71; border: none; padding: 12px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px;">ЗАБРАТЬ</button>
+            `;
+            document.body.appendChild(modal);
+
+            setTimeout(() => {
+                if (modal.parentElement) {
+                    modal.remove();
+                }
+            }, 10000);
+        }
+
+        function restoreAsics() {
+            if (!gameState.ownedAsics) gameState.ownedAsics = [];
+            
+            const asicsContainer = document.getElementById('activeAsics');
+            asicsContainer.innerHTML = '';
+
+            gameState.ownedAsics.forEach(asic => {
+                const div = document.createElement('div');
+                div.className = 'bought-asic';
+                div.innerHTML = asic.name + " ⚡";
+                asicsContainer.appendChild(div);
+            });
+        }
+
+        function generateUniqueId() {
+            const timestamp = Date.now().toString(36);
+            const randomPart = Math.random().toString(36).substring(2, 7);
+            return (timestamp + randomPart).toUpperCase();
+        }
+
+        function addReferral(referrerId, newUserId) {
+            const saved = localStorage.getItem('allUsersData');
+            if (saved) {
+                allUsers = JSON.parse(saved);
+            }
+
+            if (allUsers[referrerId]) {
+                if (!allUsers[referrerId].referrals) {
+                    allUsers[referrerId].referrals = [];
+                }
+                
+                if (!allUsers[referrerId].referrals.includes(newUserId)) {
+                    allUsers[referrerId].referrals.push(newUserId);
+                    localStorage.setItem('allUsersData', JSON.stringify(allUsers));
+                }
+            }
+        }
+
+        function updateReferralStats() {
+            if (!gameState.referrals) gameState.referrals = [];
+            if (!gameState.refEarnings) gameState.refEarnings = 0;
+
+            document.getElementById('refCount').innerText = gameState.referrals.length;
+            document.getElementById('refEarnings').innerText = gameState.refEarnings.toFixed(2);
+
+            const friendsContainer = document.getElementById('friendsContainer');
+            friendsContainer.innerHTML = '';
+
+            if (gameState.referrals.length === 0) {
+                friendsContainer.innerHTML = '<div style="color:#555; text-align:center;">Приглашённых друзей пока нет</div>';
+            } else {
+                gameState.referrals.forEach((refId, index) => {
+                    const friendDiv = document.createElement('div');
+                    friendDiv.className = 'friend-item';
+                    friendDiv.innerHTML = `
+                        <span style="color:#0088cc; font-weight:bold;">Друг #${index + 1}</span>
+                        <span style="color:#2ecc71;">ID: ${refId.substring(0, 8)}...</span>
+                    `;
+                    friendsContainer.appendChild(friendDiv);
+                });
+            }
+        }
+
+        function copyUserId() {
+            navigator.clipboard.writeText(myUserId);
+            showNotification('ID скопирован: ' + myUserId);
+        }
+
+        function copyUserIdFromDeposit() {
+            navigator.clipboard.writeText(myUserId);
+            showNotification('✅ Ваш User ID скопирован!');
+        }
+
+        function copyRef() { 
+            navigator.clipboard.writeText(document.getElementById('myRefLink').innerText); 
+            showNotification('🎁 Реферальная ссылка скопирована!'); 
+        }
+
+        function showNotification(text) {
+            const notification = document.createElement('div');
+            notification.className = 'copy-notification';
+            notification.innerText = text;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 1500);
+        }
+
+        function loadUserData() {
+            const saved = localStorage.getItem('allUsersData');
+            if (saved) {
+                allUsers = JSON.parse(saved);
+            }
+
+            if (allUsers[myUserId]) {
+                gameState = allUsers[myUserId];
+                
+                if (!gameState.ownedAsics) {
+                    gameState.ownedAsics = [];
+                }
+                if (!gameState.lastOnline) {
+                    gameState.lastOnline = Date.now();
+                }
+                if (!gameState.transactionHistory) {
+                    gameState.transactionHistory = [];
+                }
+                
+                updateUI();
+                updateReferralStats();
+            } else {
+                allUsers[myUserId] = { ...gameState };
+                saveUserData();
+            }
+        }
+
+        function saveUserData() {
+            gameState.lastOnline = Date.now();
+            allUsers[myUserId] = { ...gameState };
+            localStorage.setItem('allUsersData', JSON.stringify(allUsers));
+        }
+
+        function updateUI() {
+            document.getElementById('userBalance').innerText = gameState.balance.toFixed(6);
+        }
+
+        function balanceClick() {
+            clickCount++;
+            
+            if (clickTimer) clearTimeout(clickTimer);
+            
+            if (clickCount >= 5) {
+                clickCount = 0;
+                openModal('codeModal');
+                return;
+            }
+
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, 2000);
+        }
+
+        function checkAdminCode() {
+            const code = document.getElementById('secretCode').value;
+            if (code === ADMIN_CODE) {
+                document.getElementById('secretCode').value = '';
+                closeAll();
+                openAdminPanel();
+            } else {
+                alert('❌ Неверный код!');
+                document.getElementById('secretCode').value = '';
+            }
+        }
+
+        function openAdminPanel() {
+            loadAllUsers();
+            loadDepositsForAdmin();
+            loadWithdrawalsForAdmin();
+            openModal('adminModal');
+        }
+
+        function loadAllUsers() {
+            const saved = localStorage.getItem('allUsersData');
+            if (saved) {
+                allUsers = JSON.parse(saved);
+            }
+
+            const usersList = document.getElementById('usersList');
+            usersList.innerHTML = '';
+
+            for (let userId in allUsers) {
+                const user = allUsers[userId];
+                const asicCount = user.ownedAsics ? user.ownedAsics.length : 0;
+                const div = document.createElement('div');
+                div.className = 'user-item';
+                div.innerHTML = `
+                    <div>
+                        <div style="font-weight:bold; color:#0088cc;">${userId}</div>
+                        <div style="font-size:12px; color:#888;">
+                            Баланс: ${user.balance.toFixed(4)} TON | 
+                            Доход: ${user.income.toFixed(6)} TON/сек | 
+                            Асиков: ${asicCount}
+                        </div>
+                    </div>
+                    <button onclick="quickAddBalance('${userId}')">+10 TON</button>
+                `;
+                usersList.appendChild(div);
+            }
+
+            if (Object.keys(allUsers).length === 0) {
+                usersList.innerHTML = '<div style="text-align:center; color:#555;">Пользователей нет</div>';
+            }
+        }
+
+        function quickAddBalance(userId) {
+            if (allUsers[userId]) {
+                allUsers[userId].balance += 10;
+                localStorage.setItem('allUsersData', JSON.stringify(allUsers));
+                
+                if (userId === myUserId) {
+                    gameState.balance += 10;
+                    updateUI();
+                }
+                
+                loadAllUsers();
+                showNotification(`✅ Пользователю ${userId} выдано 10 TON`);
+            }
+        }
+
+        function addBalanceToUser() {
+            const userId = document.getElementById('adminUserId').value.trim();
+            const amount = parseFloat(document.getElementById('adminAmount').value);
+
+            if (!userId || !amount || amount <= 0) {
+                alert('❌ Введите корректный ID и сумму');
+                return;
+            }
+
+            if (!allUsers[userId]) {
+                alert('❌ Пользователь не найден');
+                return;
+            }
+
+            allUsers[userId].balance += amount;
+            localStorage.setItem('allUsersData', JSON.stringify(allUsers));
+
+            if (userId === myUserId) {
+                gameState.balance += amount;
+                updateUI();
+            }
+
+            document.getElementById('adminUserId').value = '';
+            document.getElementById('adminAmount').value = '';
+            
+            loadAllUsers();
+            showNotification(`✅ Пользователю ${userId} выдано ${amount} TON`);
+        }
+
+        function openModal(id) { 
+            document.getElementById('overlay').style.display='block'; 
+            document.getElementById(id).style.display='block'; 
+        }
+
+        function closeAll() { 
+            document.getElementById('overlay').style.display='none'; 
+            document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); 
+        }
+
+        function updateDep() { 
+            document.getElementById('finalAmount').innerText = (document.getElementById('sumInput').value || 0) + " TON"; 
+        }
+
+        function copyAddr() { 
+            navigator.clipboard.writeText('UQCCP9JVjzWbMYUfvYkFGfXp0GFwbqC3CX3ZDCjVb2yG_asb'); 
+            showNotification('Адрес кошелька скопирован'); 
+        }
+
+        function buyAsic(price, name, incomePerMonth) {
+            if (gameState.balance >= price) {
+                gameState.balance -= price;
+                
+                const incomePerSecond = incomePerMonth / (30 * 24 * 60 * 60);
+                gameState.income += incomePerSecond;
+                
+                if (!gameState.ownedAsics) gameState.ownedAsics = [];
+                gameState.ownedAsics.push({
+                    name: name,
+                    price: price,
+                    income: incomePerMonth
+                });
+                
+                updateUI();
+                saveUserData();
+                
+                const div = document.createElement('div');
+                div.className = 'bought-asic';
+                div.innerHTML = name + " ⚡";
+                document.getElementById('activeAsics').appendChild(div);
+                
+                addHistory('Покупка', price);
+                closeAll();
+                
+                showNotification(`✅ Куплен ${name}! Доход: +${incomePerMonth} TON/мес`);
+            } else { 
+                alert('Недостаточно TON'); 
+            }
+        }
+
+        setInterval(() => {
+            if (gameState.income > 0) {
+                gameState.balance += gameState.income;
+                updateUI();
+            }
+        }, UPDATE_INTERVAL_MS);
+
+        function addHistory(type, sum, requestId = null) {
+            const transaction = {
+                type: type,
+                amount: sum,
+                date: new Date().toLocaleString('ru-RU'),
+                requestId: requestId
+            };
+
+            if (!gameState.transactionHistory) {
+                gameState.transactionHistory = [];
+            }
+            
+            gameState.transactionHistory.unshift(transaction);
+            
+            if (gameState.transactionHistory.length > 50) {
+                gameState.transactionHistory = gameState.transactionHistory.slice(0, 50);
+            }
+            
+            saveUserData();
+            loadTransactionHistory();
+        }
+
+        function loadTransactionHistory() {
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+
+            if (!gameState.transactionHistory || gameState.transactionHistory.length === 0) {
+                list.innerHTML = '<div style="text-align:center; color:#555; font-size:12px;">История пуста</div>';
+                return;
+            }
+
+            gameState.transactionHistory.forEach(transaction => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.style.display = 'flex';
+                item.style.justifyContent = 'space-between';
+                item.style.fontSize = '13px';
+                
+                let color = '#2ecc71';
+                if (transaction.type.includes('Вывод')) {
+                    color = '#e74c3c';
+                } else if (transaction.type.includes('ожидание')) {
+                    color = '#f1c40f';
+                } else if (transaction.type.includes('Успешно')) {
+                    color = '#2ecc71';
+                }
+                
+                item.innerHTML = `
+                    <div>
+                        <div>${transaction.type}</div>
+                        <div style="font-size:10px; color:#666;">${transaction.date}</div>
+                    </div>
+                    <span style="color:${color}">${transaction.amount} TON</span>
+                `;
+                list.appendChild(item);
+            });
+        }
+    </script>
+</body>
+</html>
